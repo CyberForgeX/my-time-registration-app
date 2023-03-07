@@ -6,6 +6,7 @@
       "dom.iterable",
       "esnext"
     ],
+    "types": ["react", "react-dom", "react-scripts", "@types/react-big-calendar", "jest"],
     "allowJs": true,
     "skipLibCheck": true,
     "esModuleInterop": true,
