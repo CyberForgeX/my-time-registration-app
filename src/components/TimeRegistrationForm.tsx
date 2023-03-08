@@ -1,75 +1,140 @@
-import React from 'react';
-import { useForm, RegisterOptions } from 'react-hook-form';
-import moment from 'moment';
-import { TimeRegistrationFormData } from './types/TimeRegistrationEntry';
-
 interface TimeRegistrationFormProps {
-  handleSubmit: (data: TimeRegistrationFormData) => Promise<void>;
-  initialData?: TimeRegistrationFormData | null;
+  onSubmit: SubmitHandler<TimeRegistrationFormData>;
+  onDelete?: () => void;
+  onCancel: () => void;
+  formData?: TimeRegistrationFormData;
 }
 
 const TimeRegistrationForm: React.FC<TimeRegistrationFormProps> = ({
-  handleSubmit,
-  initialData,
+  onSubmit,
+  onDelete,
+  onCancel,
+  formData,
 }) => {
-  const { register, handleSubmit: onSubmit, formState: { errors } } = useForm<TimeRegistrationFormData>();
+  const defaultValues: TimeRegistrationFormData = {
+    date: new Date(),
+    startTime: new Date(),
+    endTime: new Date(),
+    description: '',
+  };
 
-  const registerOptions: RegisterOptions = {
-    required: 'This field is required',
-    validate: (value, { getValues }) => {
-      const startTime = moment(`${getValues('date')} ${getValues('startTime')}`);
-      const endTime = moment(`${getValues('date')} ${getValues('endTime')}`);
-      if (endTime.isBefore(startTime)) {
-        return 'End time cannot be before start time';
-      }
-      return true;
-    },
+  const {
+    control,
+    handleSubmit,
+    setValue,
+    formState: { errors },
+    watch,
+  } = useForm<TimeRegistrationFormData>({
+    defaultValues: formData || defaultValues,
+  });
+
+  const handleDeleteClick = () => {
+    if (onDelete) {
+      onDelete();
+    }
+  };
+
+  const handleCancelClick = () => {
+    onCancel();
+  };
+
+  const handleDateChange = (date: Date) => {
+    setValue('date', date);
+  };
+
+  const handleStartTimeChange = (date: Date) => {
+    setValue('startTime', date);
+  };
+
+  const handleEndTimeChange = (date: Date) => {
+    setValue('endTime', date);
   };
 
   return (
-    <form onSubmit={onSubmit(handleSubmit)}>
-      <div>
-        <label htmlFor="date">Date:</label>
-        <input
-          type="date"
+    <form onSubmit={handleSubmit(onSubmit)}>
+      <div className="form-group">
+        <label htmlFor="date">Date</label>
+        <DatePicker
           id="date"
-          defaultValue={moment(initialData?.date || new Date()).format('YYYY-MM-DD')}
-          {...register('date', registerOptions)}
+          className="form-control"
+          selected={watch('date')}
+          onChange={handleDateChange}
+          dateFormat="yyyy-MM-dd"
         />
-        {errors.date && <span>{errors.date.message}</span>}
+        {errors.date && (
+          <span className="text-danger">Date is required</span>
+        )}
       </div>
-      <div>
-        <label htmlFor="startTime">Start Time:</label>
-        <input
-          type="time"
+      <div className="form-group">
+        <label htmlFor="startTime">Start time</label>
+        <DatePicker
           id="startTime"
-          defaultValue={initialData?.startTime || '09:00'}
-          {...register('startTime', registerOptions)}
+          className="form-control"
+          selected={watch('startTime')}
+          onChange={handleStartTimeChange}
+          showTimeSelect
+          showTimeSelectOnly
+          timeIntervals={15}
+          timeCaption="Time"
+          dateFormat="HH:mm"
         />
-        {errors.startTime && <span>{errors.startTime.message}</span>}
+        {errors.startTime && (
+          <span className="text-danger">Start time is required</span>
+        )}
       </div>
-      <div>
-        <label htmlFor="endTime">End Time:</label>
-        <input
-          type="time"
+      <div className="form-group">
+        <label htmlFor="endTime">End time</label>
+        <DatePicker
           id="endTime"
-          defaultValue={initialData?.endTime || '17:00'}
-          {...register('endTime', registerOptions)}
+          className="form-control"
+          selected={watch('endTime')}
+          onChange={handleEndTimeChange}
+          showTimeSelect
+          showTimeSelectOnly
+          timeIntervals={15}
+          timeCaption="Time"
+          dateFormat="HH:mm"
         />
-        {errors.endTime && <span>{errors.endTime.message}</span>}
+        {errors.endTime && (
+          <span className="text-danger">End time is required</span>
+        )}
       </div>
-      <div>
-        <label htmlFor="description">Description:</label>
-        <textarea
+      <div className="form-group">
+        <label htmlFor="description">Description</label>
+        <input
           id="description"
-          defaultValue={initialData?.description || ''}
-          {...register('description', registerOptions)}
+          type="text"
+          className="form-control"
+          {...control('description', { required: true })}
         />
-        {errors.description && <span>{errors.description.message}</span>}
+        {errors.description && (
+          <span className="text-danger">Description is required</span>
+        )}
       </div>
-      <button type="submit">Submit</button>
+      <div className="form-group">
+        <button type="submit" className="btn btn-primary mr-2">
+          Save
+        </button>
+        {onDelete && (
+          <button
+            type="button"
+            className="btn btn-danger mr-2"
+            onClick={handleDeleteClick}
+          >
+            Delete
+          </button>
+        )}
+        <button
+          type="button"
+          className="btn btn-secondary"
+          onClick={handleCancelClick}
+        >
+          Cancel
+        </button>
+      </div>
     </form>
-  );
-};
+    );
+  };
+
 
 export default TimeRegistrationForm;

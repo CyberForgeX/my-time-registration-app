@@ -8,9 +8,8 @@ export interface TimeRegistrationEntry {
 }
 
 export interface TimeRegistrationFormData {
-  date: string;
-  startTime: string;
-  endTime: string;
+  date: Date;
+  startTime: Date;
+  endTime: Date;
   description: string;
-  getValues: string;
 }

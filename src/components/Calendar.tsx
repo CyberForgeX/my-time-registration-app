@@ -1,5 +1,6 @@
-import React, { useState } from "react";
-import moment from "moment";
+import React, { useState } from 'react';
+import { useForm, Control, SubmitHandler, FieldErrors } from 'react-hook-form';
+import moment from 'moment';
 import {
   Calendar as BigCalendar,
   momentLocalizer,
@@ -7,22 +8,22 @@ import {
   Views,
   DateLocalizer,
   SlotInfo,
-} from "react-big-calendar";
-import "react-big-calendar/lib/css/react-big-calendar.css";
+} from 'react-big-calendar';
+import 'react-big-calendar/lib/css/react-big-calendar.css';
 
-interface Event {
-  id: number;
-  title: string;
-  start: Date;
-  end: Date;
-  date: Date;
-}
+import RegistrationList from './RegistrationList';
+import TimeRegistrationSummary from './TimeRegistrationSummary';
+import TimeRegistrationForm from './TimeRegistrationForm';
+import { TimeRegistrationEntry, TimeRegistrationFormData } from './types/TimeRegistrationEntry';
 
 interface CalendarProps {
   selectedDate: Date;
   onDateClick: (date: Date) => void;
   events: Event[];
   onViewChange: (view: View, startDate?: Date, endDate?: Date) => void;
+  onAddRegistration: (registration: TimeRegistrationEntry) => void;
+  onDeleteRegistration: (id: string) => void;
+  onUpdateRegistration: (id: string, formData: TimeRegistrationFormData) => void;
 }
 
 const localizer: DateLocalizer<moment.Moment> = momentLocalizer(moment);
@@ -32,37 +33,64 @@ const Calendar: React.FC<CalendarProps> = ({
   onDateClick,
   events,
   onViewChange,
+  onAddRegistration,
+  onDeleteRegistration,
+  onUpdateRegistration,
 }) => {
   const handleSelectSlot = ({ start }: SlotInfo) => {
     const newEvent: Event = {
-      id: Date.now(),
-      title: "New event",
+      id: Date.now().toString(), // fixed to convert the number to a string
+      title: 'New event',
       start,
       end: moment(start).add(1, 'hour').toDate(),
-      date: start, // add the date property with the value of start
     };
     onDateClick(start);
-    setCalendarEvents([...events, newEvent]);
-  };
 
+    // open the TimeRegistrationForm when a new event is created
+    onAddRegistration({
+      id: newEvent.id,
+      date: newEvent.start,
+      startTime: newEvent.start,
+      endTime: newEvent.end,
+      description: '',
+    });
+  };
 
   const handleSelectEvent = (event: Event) => {
     onDateClick(event.start);
+
+    // open the TimeRegistrationForm with the values of the selected event
+    const registration = events.find((r) => r.id === event.id);
+    if (registration) {
+      onAddRegistration({
+        id: registration.id,
+        date: registration.start,
+        startTime: registration.start,
+        endTime: registration.end,
+        description: registration.title,
+      });
+    }
   };
 
-  const [calendarEvents, setCalendarEvents] = useState<Event[]>(events);
+  const handleViewChange = (view: string, startDate?: Date, endDate?: Date) => {
+    onViewChange(view as View, startDate, endDate);
+  };
 
   return (
-    <BigCalendar<Event, typeof View>
+    <BigCalendar<Event, Views>
       localizer={localizer}
       defaultDate={selectedDate}
       defaultView={Views.WEEK}
-      events={calendarEvents} // use calendarEvents instead of events
+      events={events}
       selectable
       onSelectSlot={handleSelectSlot}
       onSelectEvent={handleSelectEvent}
-      onView={(view, startDate, endDate) => onViewChange(view, startDate, endDate)}
-    />  );
+      onView={handleViewChange}
+      eventPropGetter={(event: Event) => ({
+        style: {
+          backgroundColor: event.id === selectedDate.toString() ? 'blue' : 'red', // added style to highlight selected event
+        },
+      })}
+    />
+  );
 };
-
-export default Calendar;

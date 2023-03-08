@@ -1,20 +1,14 @@
 import React from 'react';
-import ReactTable from 'react-table-6';
+import ReactTable, { Column } from 'react-table-6';
 import 'react-table-6/react-table.css';
 import moment from 'moment';
-import { TimeRegistrationEntry } from './types/TimeRegistrationEntry';
+import PropTypes from 'prop-types';
+import { TimeRegistrationEntry, TimeRegistrationFormData } from './types/TimeRegistrationEntry';
 
 interface RegistrationListProps {
   registrations: TimeRegistrationEntry[];
-  onDeleteRegistration: (id: string) => void;
+  onDeleteRegistration: (id: string) => Promise<void>;
   onUpdateRegistration: (id: string, formData: TimeRegistrationFormData) => void;
-}
-
-
-interface Column<T> {
-  Header: string;
-  accessor: keyof T;
-  Cell?: (row: any) => React.ReactNode;
 }
 
 const RegistrationList: React.FC<RegistrationListProps> = ({
@@ -26,17 +20,17 @@ const RegistrationList: React.FC<RegistrationListProps> = ({
     {
       Header: 'Date',
       accessor: 'date',
-      Cell: (row: any): React.ReactNode => moment(row.value).format("YYYY-MM-DD"),
+      Cell: ({ value }): React.ReactNode => moment(value).format('YYYY-MM-DD'),
     },
     {
       Header: 'Start Time',
       accessor: 'startTime',
-      Cell: (row: any): React.ReactNode => moment(row.value).format('HH:mm:ss'),
+      Cell: ({ value }): React.ReactNode => moment(value).format('HH:mm:ss'),
     },
     {
       Header: 'End Time',
       accessor: 'endTime',
-      Cell: (row: any): React.ReactNode => moment(row.value).format('HH:mm:ss'),
+      Cell: ({ value }): React.ReactNode => moment(value).format('HH:mm:ss'),
     },
     {
       Header: 'Description',
@@ -44,10 +38,10 @@ const RegistrationList: React.FC<RegistrationListProps> = ({
     },
     {
       Header: 'Actions',
-      Cell: (row: any): React.ReactNode => (
+      Cell: ({ original }): React.ReactNode => (
         <div>
-          <button onClick={() => onDeleteRegistration(row.original.id)}>Delete</button>
-          <button onClick={() => onUpdateRegistration(row.original.id, row.original)}>Edit</button>
+          <button onClick={() => onDeleteRegistration(original.id)}>Delete</button>
+          <button onClick={() => onUpdateRegistration(original.id, original)}>Edit</button>
         </div>
       ),
     },
@@ -60,6 +54,18 @@ const RegistrationList: React.FC<RegistrationListProps> = ({
       minRows={0}
     />
   );
+};
+
+RegistrationList.propTypes = {
+  registrations: PropTypes.arrayOf(PropTypes.shape({
+    id: PropTypes.string.isRequired,
+    date: PropTypes.string.isRequired,
+    startTime: PropTypes.string.isRequired,
+    endTime: PropTypes.string.isRequired,
+    description: PropTypes.string.isRequired,
+  })).isRequired,
+  onDeleteRegistration: PropTypes.func.isRequired,
+  onUpdateRegistration: PropTypes.func.isRequired,
 };
 
 export default RegistrationList;
